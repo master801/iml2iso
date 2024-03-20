@@ -33,9 +33,15 @@ class IML:
                     pass
                 elif key == 'MEDIA':
                     data_sys.media = value
+                    if data_sys.media != 'DVD' and data_sys.media != 'CD':
+                        print(f'Invalid media \"{data_sys.media}\"!')
+                        return None
                     pass
                 elif key == 'TARGET':
                     data_sys.target = value
+                    if data_sys.target != 'PS2':
+                        print('Target is other than \"PS2\"!')
+                        return None
                     pass
                 elif key == 'DISCVERSION':
                     data_sys.disc_version = value
@@ -77,24 +83,36 @@ class IML:
 
                 if key == 'DISCNAME':
                     data_cue.disc_name = value.strip('\"')
+                    if len(data_cue.disc_name) != 32:
+                        print('Key \"DISCNAME\" is not 32 chars!')
+                        return None
                     pass
                 elif key == 'PRODUCER':
                     data_cue.producer = value.strip('\"')
+                    if len(data_cue.producer) != 32:
+                        print('Key \"PRODUCER\" is not 32 chars!')
+                        return None
                     pass
                 elif key == 'COPYRIGHT':
                     data_cue.copyright = value.strip('\"')
+                    if len(data_cue.copyright) != 32:
+                        print('Key \"COPYRIGHT\" is not 32 chars!')
+                        return None
                     pass
                 elif key == 'CREATIONDATE':
                     data_cue.creation_date = int(value)
                     pass
                 elif key == 'PSTYPE':
                     data_cue.ps_type = int(value)
+                    if data_cue.ps_type != 2:
+                        print(f'Expected \"PSTYPE\" to be \"2\" but got \"{data_cue.ps_type}\"!')
+                        return None
                     pass
                 elif key == 'DISCCODE':
                     data_cue.disc_code = int(value)
                     pass
                 else:
-                    print('Something bad happened while parsing \"Sys\"!')
+                    print('Something bad happened while parsing \"Cue\"!')
                     pass
 
                 del value
@@ -158,11 +176,11 @@ class IML:
         if os.path.exists(fp_iml):
             if not os.path.isfile(fp_iml):
                 print(f'Input \"{fp_iml}\" is not a file!?')
-                return
+                return None
             pass
         else:
             print(f'Input \"{fp_iml}\" does not exist!')
-            return
+            return None
 
         with open(fp_iml, mode='rt+', encoding='ascii') as io_iml:
             iml_file = io_iml.read().splitlines(keepends=False)
@@ -171,6 +189,8 @@ class IML:
         if iml_file != None:
             has_tag = False
             tag_list: list[str] = list()
+
+            print(f'Parsing IML file \"{fp_iml}\"...')
 
             data_sys: IML.Sys = None
             data_cue: IML.Cue = None
@@ -210,5 +230,18 @@ class IML:
                 continue
             del line
             del i
+
+            if data_sys == None:
+                print('Failed to parse \"SYS\"!')
+                return None
+            if data_cue == None:
+                print('Failed to parse \"CUE\"!')
+                return None
+            if data_loc == None:
+                print('Failed to parse \"LOC\"!')
+                return None
+
+            print(f'Found {len(data_loc.entries)} file entries')
+            print('Done parsing IML file\n')
             return IML(data_sys, data_cue, data_loc)
         return None
