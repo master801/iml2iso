@@ -11,10 +11,14 @@ Do **_NOT_** ask where to get CD DVD-ROM Generator.
 ### Program Arguments:
 - `--iml`
   - The input `.iml` file
+- `--iml_dl`
+  - The `.iml` file for the second layer to create a DVD-9 image.<br>
+Do **NOT**  use this for CD images.
 - `--out_disc_image`
   - The output disc image
   - DVD-5 and DVD-9 images use the `.iso` extension.<br/>
-This will automatically be appended if none is found or if used incorrectly
+This will automatically be appended if none is given or if used incorrectly<br/>
+CD images do not need a given extension and will automatically use bin+cue.
 
 ### Examples:
 - DVD-5:
