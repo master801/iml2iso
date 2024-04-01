@@ -6,6 +6,14 @@ import os
 
 
 @dataclasses.dataclass
+class Time:
+
+    minutes: int
+    seconds: int
+    fractions: int
+
+
+@dataclasses.dataclass
 class IML:
 
     @dataclasses.dataclass
@@ -63,20 +71,59 @@ class IML:
     @dataclasses.dataclass
     class Cue:
 
+        @dataclasses.dataclass
+        class Track:
+
+            track: str  # 2 byte (hex) string
+            index: str  # 2 byte (decimal) string
+            time: Time  # XX:XX:XX
+            form: str  # CDROM2_X
+            control: str  # DATA, AUDIO?
+            lbn: int = None  # Mode 2 sector size
+
         disc_name: str  # 32 byte string
         producer: str  # 32 byte string
         copyright: str  # 32 byte string
         creation_date: int  # yearmonthday
         ps_type: int
         disc_code: str  # padnumber (01)
+        tracks: list[Track] = None
 
         def __init__(self):
             return
 
+        # noinspection PyComparisonWithNone
         @staticmethod
         def parse(tag_list: list[str]):
             data_cue = IML.Cue()
             for tag in tag_list:
+                if '=' not in tag:  # assume this is a track
+                    track_tag = tag.split()
+
+                    if data_cue.tracks == None:
+                        data_cue.tracks = list()
+                        pass
+
+                    track: str = track_tag[0]
+                    index: str = track_tag[1]
+
+                    time_split = track_tag[2].split(':', 3)
+                    time = Time(int(time_split[0]), int(time_split[1]), int(time_split[2]))
+
+                    form: str = track_tag[3]
+                    control: str = track_tag[4]
+                    if len(track_tag) == 6:
+                        lbn = int(track_tag[5])
+                        pass
+                    else:
+                        lbn = None
+                        pass
+
+                    data_cue.tracks.append(
+                        IML.Cue.Track(track, index, time, form, control, lbn)
+                    )
+                    continue
+
                 stripped = tag.strip().split('=', maxsplit=1)
                 key = stripped[0]
                 value = stripped[1]
@@ -170,6 +217,8 @@ class IML:
     cue: Cue
     loc: Loc
 
+    fp: str
+
     # noinspection PyComparisonWithNone
     @staticmethod
     def parse_iml(fp_iml: str):
@@ -243,5 +292,5 @@ class IML:
 
             print(f'Found {len(data_loc.entries)} file entries')
             print('Done parsing IML file\n')
-            return IML(data_sys, data_cue, data_loc)
+            return IML(data_sys, data_cue, data_loc, fp_iml)
         return None
