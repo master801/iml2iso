@@ -187,6 +187,9 @@ def convert_to_cd_media(iml_cd: iml.IML, out_fp: str):
 
             print(f'Reading file \"{entry.source}\"...')
             with open(entry.source, mode='rb+') as io_entry:
+                io_entry.seek(0, io.SEEK_END)
+                eof = io_entry.tell()
+                io_entry.seek(0, io.SEEK_SET)
                 if entry.mode == '2.1':  # CD-ROM XA Mode 2 Form 1
                     # write in blocks of 2352
                     read_data_block = io_entry.read(DVD_SECTOR_SIZE)  # read a "sector" of data
@@ -205,7 +208,13 @@ def convert_to_cd_media(iml_cd: iml.IML, out_fp: str):
                         io_bin.write(b'\x02')  # mode - always 2
 
                         # subheader
-                        io_bin.write(b'\x00' * 8)  # zeroed out?
+                        if len(read_data_block) < DVD_SECTOR_SIZE or io_entry.tell() == eof:
+                            subheader = b'\x00\x00\x89\x00' * 2  # EOF
+                            pass
+                        else:
+                            subheader = b'\x00\x00\x08\x00' * 2  # DATA..?
+                            pass
+                        io_bin.write(subheader)
 
                         # user data
                         if fucked_time.minutes == 0 and fucked_time.seconds == 2 and fucked_time.fractions == 14:  # disc info?
